@@ -1,103 +1,278 @@
-import Image from "next/image";
+'use client'
+import React, { useState, useEffect } from 'react'
+import Link from 'next/link'
+import Image from 'next/image'
+
+interface Pet {
+  id: string;
+  name: string;
+  type: string;
+  breed: string | null;
+  age: number;
+  description: string;
+  imageUrl?: string;
+  personality: string[];
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [featuredPets, setFeaturedPets] = useState<Pet[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    const fetchPets = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/pets');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch pets');
+        }
+        
+        const data = await response.json();
+        // Get random 3 pets or all if less than 3
+        const petsToShow = data.pets || [];
+        if (petsToShow.length > 3) {
+          // Shuffle array and take first 3
+          const shuffled = [...petsToShow].sort(() => 0.5 - Math.random());
+          setFeaturedPets(shuffled.slice(0, 3));
+        } else {
+          setFeaturedPets(petsToShow);
+        }
+      } catch (err) {
+        console.error('Error fetching pets:', err);
+        setError('Failed to load pets');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPets();
+  }, []);
+
+  return (
+    <main className="flex min-h-screen flex-col items-center">
+      {/* Hero Section */}
+      <section className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
+        <div className="container mx-auto px-4 py-16 md:py-24 max-w-6xl">
+          <div className="flex flex-col md:flex-row items-center">
+            <div className="md:w-1/2 mb-8 md:mb-0">
+              <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
+                Find Your Perfect Pet Companion
+              </h1>
+              <p className="text-xl md:text-2xl mb-8">
+                Our AI-powered matching technology helps you discover the ideal pet that fits your lifestyle and preferences.
+              </p>
+              <Link href="/find-pet" className="inline-flex items-center px-8 py-6 bg-white text-blue-700 hover:bg-blue-50 text-lg rounded-lg font-semibold">
+                Find Your Match
+              </Link>
+            </div>
+            <div className="md:w-1/2 relative h-64 md:h-96 w-full md:px-8">
+              <div className="absolute inset-0 bg-white rounded-lg overflow-hidden shadow-xl">
+                <Image
+                  src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?q=80&w=1200&auto=format&fit=crop"
+                  alt="Happy pets"
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              </div>
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+      </section>
+
+      {/* How It Works Section */}
+      <section className="w-full py-16 bg-gray-50">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <h2 className="text-3xl font-bold text-center mb-12 text-black">How It Works</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-white p-6 rounded-lg shadow-md text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-blue-600 text-2xl font-bold">1</span>
+              </div>
+              <h3 className="text-xl font-semibold mb-3 text-black">Share Your Preferences</h3>
+              <p className="text-black">
+                Tell us about your lifestyle, experience with pets, and what you're looking for in a companion.
+              </p>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow-md text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-blue-600 text-2xl font-bold">2</span>
+              </div>
+              <h3 className="text-xl font-semibold mb-3 text-black">AI-Powered Matching</h3>
+              <p className="text-black">
+                Our advanced algorithm analyzes your information to find pets that would thrive in your home.
+              </p>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow-md text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-blue-600 text-2xl font-bold">3</span>
+              </div>
+              <h3 className="text-xl font-semibold mb-3 text-black">Meet Your Match</h3>
+              <p className="text-black">
+                Review your personalized matches and take the first step toward meeting your new best friend.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Pets Section */}
+      <section className="w-full py-16">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <h2 className="text-3xl font-bold text-center mb-4">Featured Pets</h2>
+          <p className="text-center text-gray-600 mb-12">Meet some of our wonderful animals waiting for their forever homes</p>
+          
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+          ) : error ? (
+            <div className="text-center text-red-500 mb-8">
+              {error}
+              <p className="mt-2">
+                <Link href="/debug" className="text-blue-600 hover:text-blue-800">
+                  Check system status
+                </Link>
+              </p>
+            </div>
+          ) : featuredPets.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-600 mb-4">No pets available at the moment.</p>
+              <Link href="/admin/add-pet" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                Add Your First Pet
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {featuredPets.map((pet) => (
+                <PetCard key={pet.id} pet={pet} />
+              ))}
+            </div>
+          )}
+          
+          <div className="text-center mt-12">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/find-pet" className="inline-flex items-center justify-center px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md">
+                Find Your Perfect Match
+              </Link>
+              <Link href="/browse" className="inline-flex items-center justify-center px-6 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-md">
+                Browse All Pets
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="w-full py-16 bg-gray-50">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <h2 className="text-3xl font-bold text-center mb-12 text-black">Happy Matches</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <div className="flex items-center mb-4">
+                <div className="h-12 w-12 rounded-full bg-gray-200 mr-4"></div>
+                <div>
+                  <h3 className="font-semibold text-black">Sarah Johnson</h3>
+                  <p className="text-gray-600 text-sm">Matched with Max, Golden Retriever</p>
+                </div>
+              </div>
+              <p className="text-gray-700 italic">
+                "The matching process was incredible! Max fits perfectly into our active family life. It's like he was made for us!"
+              </p>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <div className="flex items-center mb-4">
+                <div className="h-12 w-12 rounded-full bg-gray-200 mr-4"></div>
+                <div>
+                  <h3 className="font-semibold text-black">Michael Roberts</h3>
+                  <p className="text-gray-600 text-sm">Matched with Luna, Siamese Cat</p>
+                </div>
+              </div>
+              <p className="text-gray-700 italic">
+                "As someone living alone in an apartment, Luna has been the perfect companion. She's independent but affectionate exactly when I need it."
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="w-full py-16 bg-blue-600 text-white">
+        <div className="container mx-auto px-4 text-center max-w-4xl">
+          <h2 className="text-3xl font-bold mb-6">Ready to Meet Your Perfect Pet?</h2>
+          <p className="text-xl mb-8">
+            Take our quick matching quiz and discover the companion that's right for you.
+          </p>
+          <Link href="/find-pet" className="inline-flex items-center px-8 py-3 bg-white text-blue-600 hover:bg-blue-50 text-lg rounded-lg font-semibold">
+            Start Matching Now
+          </Link>
+        </div>
+      </section>
+    </main>
+  )
+}
+
+function PetCard({ pet }: { pet: Pet }) {
+  return (
+    <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg">
+      <div className="relative h-64">
+        {pet.imageUrl ? (
           <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+            src={pet.imageUrl}
+            alt={`${pet.name} the ${pet.breed || pet.type}`}
+            fill
+            className="object-cover"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        ) : (
+          <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
+            <span className="text-gray-400">No image available</span>
+          </div>
+        )}
+      </div>
+      
+      <div className="p-4">
+        <h3 className="text-xl font-semibold">{pet.name}</h3>
+        <p className="text-gray-600">{pet.type} • {pet.breed || 'Mixed'} • {pet.age} {pet.age === 1 ? 'year' : 'years'} old</p>
+        
+        <div className="mt-3 flex flex-wrap gap-2">
+          {pet.personality.slice(0, 3).map((trait) => (
+            <span 
+              key={trait} 
+              className="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full"
+            >
+              {trait}
+            </span>
+          ))}
+          {pet.personality.length > 3 && (
+            <span className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">
+              +{pet.personality.length - 3} more
+            </span>
+          )}
+        </div>
+        
+        <div className="mt-4 flex space-x-2">
+          <Link 
+            href={`/browse?type=${pet.type}`} 
+            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+          >
+            Find similar pets
+          </Link>
+          <span className="text-gray-300">|</span>
+          <Link 
+            href={`/admin/pets`} 
+            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+          >
+            View all pets
+          </Link>
+        </div>
+      </div>
     </div>
-  );
+  )
 }
